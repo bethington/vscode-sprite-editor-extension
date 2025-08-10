@@ -2,13 +2,13 @@
 
 A Visual Studio Code extension for viewing and editing Diablo 2 Resurrected (D2R) sprite files.
 
-![Extension Preview](https://user-images.githubusercontent.com/3132889/92393088-467a6b00-f15a-11ea-8d04-f1e5bda9b5ba.gif)
+![Extension Preview](docs/images/D2RSpriteViewer.png)
 
 ## Features
 
 - **D2R Sprite Viewer**: Automatically opens `.sprite` files in a dedicated viewer
 - **Pixelated Rendering**: Crisp pixel art display optimized for sprite files
-- **Interactive Controls**: Zoom, pan, and toggle transparency grid
+- **Interactive Controls**: Zoom, pan, and transparency grid toggle
 - **Paint.NET Integration**: Edit sprites externally with automatic sync
 - **PNG Conversion**: Export sprites to PNG and import PNG back to sprite format
 - **Large File Support**: Handles sprites up to 512x512 pixels efficiently
@@ -36,13 +36,23 @@ A Visual Studio Code extension for viewing and editing Diablo 2 Resurrected (D2R
 
 ## Installation
 
-1. Install from VS Code Marketplace
-2. Open any `.sprite` file
-3. The viewer launches automatically
+### From VSIX Package
+
+1. Download the latest `d2r-sprite-editor-2025-1.0.0.vsix` file
+2. Open VS Code
+3. Go to Extensions (Ctrl+Shift+X)
+4. Click the "..." menu and select "Install from VSIX..."
+5. Select the downloaded VSIX file
+
+### From VS Code Marketplace
+
+1. Open VS Code Extensions (Ctrl+Shift+X)
+2. Search for "D2R Sprite Editor"
+3. Click Install
 
 ## External Editing Workflow
 
-1. Click **"Edit in Paint.NET"** 
+1. Click **"Edit in Paint.NET"**
 2. Paint.NET opens with the sprite as PNG
 3. Make your edits and save
 4. The sprite file updates automatically
@@ -60,6 +70,14 @@ A Visual Studio Code extension for viewing and editing Diablo 2 Resurrected (D2R
 - **Max Dimensions**: 4096x4096 pixels
 - **Performance**: Optimized for large sprites (tested up to 512x512)
 
+## Documentation
+
+For complete documentation, see the [docs](docs/) folder:
+
+- **[User Guide](docs/USER-GUIDE.md)** - Complete usage instructions
+- **[Development Guide](docs/DEVELOPMENT.md)** - Setup and contribution info
+- **[Sprite Format](docs/SPRITE-FORMAT.md)** - Technical format details
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details
@@ -70,33 +88,47 @@ MIT License - see [LICENSE](LICENSE) for details
 2. Create a feature branch
 3. Submit a pull request
 
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed contribution guidelines.
+
 ## Support
 
 For issues or questions:
+
 - [GitHub Issues](https://github.com/bethington/vscode-sprite-editor-extension/issues)
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=d2rmodding.d2r-sprite-editor-2025)
 
-## Current Limitations
-
-- No resize functionality
-- No selection or move tools
-- No palette creation or saving
-- Missing most basic features expected in pixel art tools
-
-## Known Issues
-
-- Flood fill may leave gaps
-- Undo history is unreliable
-- Overall stability is questionable
-
-## Bug Reports
-
-- Bug reports are appreciated, but I may not have the motivation to fix them
-- Pull requests with fixes are very welcome!
-
 ## Build Instructions
 
-- yarn
-- yarn watch:front
-- Open in VSCode and press F5 to run
-- Reload required when editing files in the front/ directory
+```bash
+# Install dependencies
+npm install
+
+# Compile TypeScript
+npm run compile
+
+# Package extension
+vsce package
+
+# Run tests
+npm test
+```
+
+## Current Features
+
+- ✅ **Sprite Viewing**: High-quality pixelated rendering
+- ✅ **PNG Export/Import**: Bidirectional conversion
+- ✅ **Paint.NET Integration**: External editing workflow
+- ✅ **File Watching**: Automatic updates from external edits
+- ✅ **Zoom & Pan**: Interactive navigation
+- ✅ **Transparency Grid**: Visual aid for transparent areas
+
+## Planned Features
+
+- Batch conversion tools
+- Additional image editor integrations
+- Sprite animation support
+- Metadata editing
+
+## Version
+
+**Current Version**: 1.0.0 - Complete rewrite with modern TypeScript architecture
