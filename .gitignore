@@ -6,3 +6,4 @@ node_modules/
 out/
 .vs/
 media/dist
+*.vsix
