@@ -1,44 +1,102 @@
-# VSCode Sprite Editor Extension
+# D2R Sprite Editor
 
-![vscode-sprite-ext-01](https://user-images.githubusercontent.com/3132889/92393088-467a6b00-f15a-11ea-8d04-f1e5bda9b5ba.gif)
+A Visual Studio Code extension for viewing and editing Diablo 2 Resurrected (D2R) sprite files.
 
-- PNGの編集が可能です。
-- 右クリックでスポイト
-- 塗りつぶし機能つき
+![Extension Preview](https://user-images.githubusercontent.com/3132889/92393088-467a6b00-f15a-11ea-8d04-f1e5bda9b5ba.gif)
 
-# 使い方
+## Features
 
-下記コマンドで新規作成をするか、
+- **D2R Sprite Viewer**: Automatically opens `.sprite` files in a dedicated viewer
+- **Pixelated Rendering**: Crisp pixel art display optimized for sprite files
+- **Interactive Controls**: Zoom, pan, and toggle transparency grid
+- **Paint.NET Integration**: Edit sprites externally with automatic sync
+- **PNG Conversion**: Export sprites to PNG and import PNG back to sprite format
+- **Large File Support**: Handles sprites up to 512x512 pixels efficiently
 
-![image](https://user-images.githubusercontent.com/3132889/92401689-1e463880-f169-11ea-979d-82b3fa07466c.png)
+## Supported Formats
 
-PNGファイルを右クリックしてSprite Editorで開いてください。
+- **D2R Sprites** (`.sprite` files): SpA1/SPa1 format with BGRA pixel data
+- Used for character sprites, items, and game assets in Diablo 2 Resurrected
 
-![image](https://user-images.githubusercontent.com/3132889/92401733-39b14380-f169-11ea-98e4-fa57937e40e1.png)
+## Quick Start
 
-![image](https://user-images.githubusercontent.com/3132889/92401783-5188c780-f169-11ea-8c32-4ecfb9795e9c.png)
+1. **Open a sprite file**: Click any `.sprite` file in VS Code
+2. **Auto-viewer**: The D2R Sprite Viewer opens automatically
+3. **Interactive controls**: Use mouse wheel to zoom, drag to pan
 
-# できないこと
+## Controls
 
-- リサイズ
-- 範囲選択や移動
-- パレットの作成や保存
-- その他ドット絵ツールに求められる基本的な機能すべて
+| Button | Function | Description |
+|--------|----------|-------------|
+| 🏁 **Transparency Grid** | Toggle background | Show/hide checkerboard pattern |
+| 🔍 **Reset Zoom** | Reset to 100% | Return to original size |
+| 🎨 **Edit in Paint.NET** | External editor | Launch Paint.NET with auto-sync |
+| 📤 **Export to PNG** | Save as PNG | Convert sprite to PNG format |
+| 📥 **Import from PNG** | Load from PNG | Update sprite from PNG file |
 
-# バグ
+## Installation
 
-- 塗り残しが発生する
-- アンドゥ履歴が怪しい
-- そもそも安定している気がしない
+1. Install from VS Code Marketplace
+2. Open any `.sprite` file
+3. The viewer launches automatically
 
-# バグ報告について
+## External Editing Workflow
 
-- 報告はありがたいんですが直す気力はあまりないと思います
-- 修正PRまでくれると嬉しいです
+1. Click **"Edit in Paint.NET"** 
+2. Paint.NET opens with the sprite as PNG
+3. Make your edits and save
+4. The sprite file updates automatically
+5. View changes instantly in VS Code
 
-# ビルド手順
+## Requirements
+
+- **VS Code**: 1.48.0 or higher
+- **Paint.NET**: Optional, for external editing
+
+## Technical Details
+
+- **Format Support**: D2R SpA1/SPa1 sprite format
+- **Pixel Format**: BGRA with transparency
+- **Max Dimensions**: 4096x4096 pixels
+- **Performance**: Optimized for large sprites (tested up to 512x512)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+## Support
+
+For issues or questions:
+- [GitHub Issues](https://github.com/bethington/vscode-sprite-editor-extension/issues)
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=d2rmodding.d2r-sprite-editor-2025)
+
+## Current Limitations
+
+- No resize functionality
+- No selection or move tools
+- No palette creation or saving
+- Missing most basic features expected in pixel art tools
+
+## Known Issues
+
+- Flood fill may leave gaps
+- Undo history is unreliable
+- Overall stability is questionable
+
+## Bug Reports
+
+- Bug reports are appreciated, but I may not have the motivation to fix them
+- Pull requests with fixes are very welcome!
+
+## Build Instructions
 
 - yarn
 - yarn watch:front
-- VSCodeで開いてF5で実行
-- front内を編集した場合はリロードが必要
+- Open in VSCode and press F5 to run
+- Reload required when editing files in the front/ directory
