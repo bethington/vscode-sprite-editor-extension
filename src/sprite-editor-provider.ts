@@ -63,19 +63,28 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
         );
 
         try {
-            // Read and convert sprite file
+            // Read and parse sprite file
             const spriteData = fs.readFileSync(document.uri.fsPath);
-            const pngBuffer = await this.convertSpriteToPng(spriteData);
-            const base64Png = pngBuffer.toString('base64');
+            const header = this.parseD2RSpriteHeader(spriteData);
             
-            // Set webview content
+            // Convert all frames to PNG
+            const frameData = [];
+            for (let frameIndex = 0; frameIndex < header.frameCount; frameIndex++) {
+                const pngBuffer = await this.convertFrameToPng(spriteData, header, frameIndex);
+                const base64Png = pngBuffer.toString('base64');
+                frameData.push(base64Png);
+            }
+            
+            // Set webview content with all frames
             webviewPanel.webview.html = this.getWebviewContent(
-                base64Png, 
-                path.basename(document.uri.fsPath)
+                frameData, 
+                path.basename(document.uri.fsPath),
+                header
             );
 
-            // Update title
-            webviewPanel.title = `🖼️ ${path.basename(document.uri.fsPath)}`;
+            // Update title with frame count
+            const frameText = header.frameCount > 1 ? ` (${header.frameCount} frames)` : '';
+            webviewPanel.title = `🖼️ ${path.basename(document.uri.fsPath)}${frameText}`;
 
         } catch (error) {
             // Show error in webview
@@ -90,7 +99,7 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
     /**
      * Generate the webview HTML content for displaying the sprite
      */
-    private getWebviewContent(base64Png: string, fileName: string): string {
+    private getWebviewContent(frameData: string[], fileName: string, header: any): string {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -221,14 +230,58 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
         .image-container:hover .zoom-info {
             opacity: 1;
         }
+        .frame-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .frame-nav-button {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .frame-nav-button:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+        .frame-nav-button:disabled {
+            background: var(--vscode-input-background);
+            color: var(--vscode-descriptionForeground);
+            cursor: not-allowed;
+        }
+        .frame-info {
+            background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: var(--vscode-editor-font-family);
+            font-size: 13px;
+            margin: 0 8px;
+        }
     </style>
 </head>
 <body>
     <div class="viewer-container">
         <div class="image-container">
             <div class="zoom-info" id="zoomInfo">100%</div>
-            <img id="spriteImage" class="sprite-image" src="data:image/png;base64,${base64Png}" alt="D2R Sprite" />
+            <img id="spriteImage" class="sprite-image" src="data:image/png;base64,${frameData[0]}" alt="D2R Sprite" />
         </div>
+        
+        ${header.frameCount > 1 ? `
+        <div class="frame-controls">
+            <button class="frame-nav-button" onclick="previousFrame()">⏮️ Previous</button>
+            <div class="frame-info">
+                Frame <span id="currentFrame">1</span> of <span id="totalFrames">${header.frameCount}</span>
+            </div>
+            <button class="frame-nav-button" onclick="nextFrame()">⏭️ Next</button>
+        </div>
+        ` : ''}
         
         <div class="controls">
             <button class="control-button active" id="backgroundBtn" onclick="toggleBackground()">
@@ -255,15 +308,19 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
             </div>
             <div class="info-row">
                 <span class="info-label">Dimensions:</span>
-                <span id="dimensions">Loading...</span>
+                <span id="dimensions">${header.width} × ${header.frameHeight} pixels per frame</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Format:</span>
-                <span>D2R Sprite (SpA1/SPa1)</span>
+                <span>D2R Sprite (${header.magic})</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Frames:</span>
+                <span>${header.frameCount} ${header.frameCount === 1 ? 'frame' : 'frames'}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Controls:</span>
-                <span>Mouse wheel to zoom, drag to pan</span>
+                <span>Mouse wheel to zoom, drag to pan${header.frameCount > 1 ? ', arrow keys for frames' : ''}</span>
             </div>
         </div>
     </div>
@@ -273,19 +330,68 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
         const zoomInfo = document.getElementById('zoomInfo');
         const dimensions = document.getElementById('dimensions');
         const backgroundBtn = document.getElementById('backgroundBtn');
+        const currentFrameSpan = document.getElementById('currentFrame');
+        const totalFramesSpan = document.getElementById('totalFrames');
         
+        // Frame data and state
+        const frames = [${frameData.map(frame => `'data:image/png;base64,${frame}'`).join(', ')}];
+        let currentFrameIndex = 0;
         let scale = 1;
         let backgroundEnabled = true;
         
         // Set pixelated rendering as default and permanent
         img.style.imageRendering = 'pixelated';
         
+        // Frame navigation functions
+        function updateFrame() {
+            if (frames.length > 0) {
+                img.src = frames[currentFrameIndex];
+                if (currentFrameSpan) {
+                    currentFrameSpan.textContent = currentFrameIndex + 1;
+                }
+            }
+        }
+        
+        function nextFrame() {
+            if (frames.length > 1) {
+                currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+                updateFrame();
+            }
+        }
+        
+        function previousFrame() {
+            if (frames.length > 1) {
+                currentFrameIndex = (currentFrameIndex - 1 + frames.length) % frames.length;
+                updateFrame();
+            }
+        }
+        
+        // Keyboard shortcuts for frame navigation
+        document.addEventListener('keydown', function(e) {
+            if (frames.length <= 1) return;
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    previousFrame();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    nextFrame();
+                    break;
+            }
+        });
+        
         // Update image info when loaded
         img.onload = function() {
-            console.log('Image loaded:', img.naturalWidth, 'x', img.naturalHeight);
-            dimensions.textContent = \`\${img.naturalWidth} × \${img.naturalHeight} pixels\`;
-            updateInfo();
+            console.log('Frame', currentFrameIndex + 1, 'loaded:', img.naturalWidth, 'x', img.naturalHeight);
         };
+        
+        // Initialize frame display
+        if (totalFramesSpan) {
+            totalFramesSpan.textContent = frames.length;
+        }
+        updateFrame();
         
         // Re-fit when window is resized (reset zoom only)
         window.addEventListener('resize', function() {
@@ -472,38 +578,98 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
         const { createCanvas } = require('canvas');
         
         const header = this.parseD2RSpriteHeader(spriteData);
-        const pixelData = this.extractD2RPixelData(spriteData, header);
-        const rgbaData = this.convertBGRAToRGBA(pixelData, header.width, header.height);
+        // For backward compatibility, show the first frame if multiple frames exist
+        return this.convertFrameToPng(spriteData, header, 0);
+    }
+
+    private async convertFrameToPng(spriteData: Buffer, header: any, frameIndex: number): Promise<Buffer> {
+        const { createCanvas } = require('canvas');
         
-        const canvas = createCanvas(header.width, header.height);
+        // exampleJSproject: Use individual frame width from header calculation
+        const canvas = createCanvas(header.frameWidth, header.frameHeight);
         const ctx = canvas.getContext('2d');
         
-        const imageData = ctx.createImageData(header.width, header.height);
-        imageData.data.set(rgbaData);
-        ctx.putImageData(imageData, 0, 0);
+        // exampleJSproject: Create image data using exact algorithm
+        const imageData = ctx.createImageData(header.frameWidth, header.frameHeight);
         
+        // exampleJSproject: Process pixels exactly like C# code
+        // C# loop: for (x = 0; x < height; x++) for (y = 0; y < width; y++)
+        for (let x = 0; x < header.frameHeight; x++) {
+            for (let y = 0; y < (header.frameCount > 1 ? header.frameWidth : header.width); y++) {
+                // exampleJSproject: Calculate byte offset - matches C#: 0x28 + x * 4 * width + y * 4
+                const baseVal = 0x28 + x * 4 * header.width + y * 4 + frameIndex * header.frameWidth * 4;
+                
+                if (baseVal + 3 < spriteData.length) {
+                    // exampleJSproject: Read RGBA values - matches C# byte order
+                    const r = spriteData[baseVal + 0];
+                    const g = spriteData[baseVal + 1];
+                    const b = spriteData[baseVal + 2];
+                    const a = spriteData[baseVal + 3];
+
+                    // exampleJSproject: Set pixel in ImageData - matches C# SetPixel(y, x, Color.FromArgb(a, r, g, b))
+                    const pixelIndex = (x * header.frameWidth + y) * 4;
+                    imageData.data[pixelIndex] = r;     // Red
+                    imageData.data[pixelIndex + 1] = g; // Green
+                    imageData.data[pixelIndex + 2] = b; // Blue
+                    imageData.data[pixelIndex + 3] = a; // Alpha
+                }
+            }
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
         return canvas.toBuffer('image/png');
     }
     
     private parseD2RSpriteHeader(data: Buffer) {
-        if (data.length < 16) {
+        if (data.length < 24) {
             throw new Error('File too small to contain valid D2R sprite header');
         }
         
+        // exampleJSproject: Read signature (first 4 bytes)
         const magic = data.toString('ascii', 0, 4);
         if (magic !== 'SpA1' && magic !== 'SPa1') {
             throw new Error(`Invalid D2R sprite magic: expected 'SpA1' or 'SPa1', got '${magic}'`);
         }
         
+        // exampleJSproject: Read version (2 bytes at offset 4) - matches C# exactly
         const version = data.readUInt16LE(4);
-        const width = data.readUInt16LE(6);
-        const height = data.readUInt16LE(8);
         
-        if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
-            throw new Error(`Invalid dimensions: ${width}x${height}`);
+        // exampleJSproject: Read width (4 bytes at offset 8) and height (4 bytes at offset 0xC/12) - matches C# exactly
+        const totalWidth = data.readInt32LE(8);
+        const frameHeight = data.readInt32LE(12);
+        
+        // exampleJSproject: Frame count at offset 0x14 (20) - matches C# exactly
+        const frameCount = data.readUInt32LE(20);
+        
+        // exampleJSproject: Pixel data starts at offset 0x28 (40)
+        const pixelDataOffset = 40;
+
+        if (totalWidth <= 0 || frameHeight <= 0 || totalWidth > 16384 || frameHeight > 16384) {
+            throw new Error(`Invalid dimensions: ${totalWidth}x${frameHeight}`);
         }
+
+        // exampleJSproject: Calculate individual frame dimensions
+        const actualFrameCount = frameCount > 1 ? frameCount : 1;
+        const individualFrameWidth = actualFrameCount > 1 ? Math.floor(totalWidth / actualFrameCount) : totalWidth;
         
-        return { magic, version, width, height, pixelDataOffset: 0x28 };
+        // Validate pixel data size
+        const expectedPixelSize = totalWidth * frameHeight * 4;
+        const actualPixelSize = data.length - pixelDataOffset;
+        
+        if (actualPixelSize < expectedPixelSize) {
+            console.warn(`Warning: Expected ${expectedPixelSize} bytes of pixel data, but only ${actualPixelSize} available`);
+        }
+
+        return { 
+            magic, 
+            version, 
+            width: totalWidth,           // Total width of all frames (exampleJSproject compatibility)
+            height: frameHeight,         // Individual frame height
+            frameCount: actualFrameCount, 
+            frameHeight: frameHeight,    // Keep for compatibility
+            frameWidth: individualFrameWidth, // Individual frame width (exampleJSproject style)
+            pixelDataOffset
+        };
     }
     
     private extractD2RPixelData(data: Buffer, header: any): Buffer {
@@ -518,6 +684,25 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
         }
         
         return data.slice(pixelDataStart, pixelDataStart + expectedSize);
+    }
+
+    private extractFramePixelData(data: Buffer, header: any, frameIndex: number): Buffer {
+        const frameSize = header.width * header.frameHeight * 4;
+        const frameOffset = header.pixelDataOffset + (frameIndex * frameSize);
+        const frameEnd = frameOffset + frameSize;
+        
+        if (frameIndex >= header.frameCount) {
+            throw new Error(`Frame index ${frameIndex} out of range (0-${header.frameCount - 1})`);
+        }
+        
+        if (frameEnd > data.length) {
+            const availableData = data.slice(frameOffset);
+            const paddedData = Buffer.alloc(frameSize);
+            availableData.copy(paddedData, 0, 0, Math.min(availableData.length, frameSize));
+            return paddedData;
+        }
+        
+        return data.slice(frameOffset, frameEnd);
     }
     
     private convertBGRAToRGBA(bgraData: Buffer, width: number, height: number): Buffer {
@@ -761,11 +946,11 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
             const imageData = ctx.getImageData(0, 0, image.width, image.height);
             const rgbaData = imageData.data;
             
-            // Convert RGBA to BGRA format (D2R sprites use BGRA)
-            const bgraData = this.convertRGBAToBGRA(Buffer.from(rgbaData), image.width, image.height);
+            // D2R sprites use RGBA format, no conversion needed
+            const spritePixelData = Buffer.from(rgbaData);
             
             // Create new sprite file with updated pixel data
-            const newSpriteData = this.createD2RSpriteFile(originalHeader, bgraData, originalSpriteData);
+            const newSpriteData = this.createD2RSpriteFile(originalHeader, spritePixelData, originalSpriteData);
             
             // Create backup of original sprite
             const backupPath = spritePath + '.backup';

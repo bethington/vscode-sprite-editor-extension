@@ -10,7 +10,7 @@ suite('Sprite Editor Provider Test Suite', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('d2rmodding.d2r-sprite-editor-2025'));
+        assert.ok(vscode.extensions.getExtension('bethington.d2r-sprite-editor-2025'));
     });
 
     test('Should register sprite custom editor', async () => {

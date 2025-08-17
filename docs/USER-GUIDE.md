@@ -27,16 +27,25 @@ Located below the image display:
 
 | Button | Icon | Function |
 |--------|------|----------|
+| Previous Frame | ⏮️ | Navigate to previous frame (multi-frame sprites only) |
+| Next Frame | ⏭️ | Navigate to next frame (multi-frame sprites only) |
 | Transparency Grid | 🏁 | Toggle checkerboard background |
 | Reset Zoom | 🔍 | Return to 100% zoom level |
 | Edit in Paint.NET | 🎨 | Open external editor |
 | Export to PNG | 📤 | Save sprite as PNG file |
 | Import from PNG | 📥 | Update sprite from PNG |
 
+### Frame Information
+For multi-frame sprites, displays:
+- **Current Frame**: Frame number (1-based)
+- **Total Frames**: Total number of frames in the sprite
+- **Navigation Controls**: Only visible for sprites with more than 1 frame
+
 ### Information Panel
 Shows file details:
 - **File name**: Current sprite file
-- **Dimensions**: Width × height in pixels
+- **Dimensions**: Width × height in pixels per frame
+- **Frame Count**: Number of frames (1 for static sprites)
 - **Format**: D2R Sprite (SpA1/SPa1)
 - **Controls**: Usage instructions
 
@@ -47,6 +56,13 @@ Shows file details:
 2. **Zoom**: Use mouse wheel to zoom in/out
 3. **Pan**: Click and drag to move around
 4. **Reset view**: Click "Reset Zoom" button
+
+### Multi-Frame Navigation
+For sprites with multiple frames:
+1. **Frame controls**: Previous/Next buttons appear automatically
+2. **Keyboard shortcuts**: Use ← and → arrow keys to navigate
+3. **Frame counter**: Shows "Frame X of Y" in the control panel
+4. **Automatic detection**: Multi-frame sprites are detected automatically
 
 ### Transparency
 - **Toggle grid**: Click "Transparency Grid" button

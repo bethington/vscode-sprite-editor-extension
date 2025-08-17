@@ -56,10 +56,10 @@ The extension implements `vscode.CustomReadonlyEditorProvider`:
 - **Webview Communication**: Messages between webview and extension
 
 ### Sprite Processing
-1. **File Reading**: Parse D2R sprite headers and pixel data
-2. **Conversion**: BGRA → RGBA for canvas display
+1. **File Reading**: Parse D2R sprite headers and pixel data using ExampleJS algorithm
+2. **Conversion**: RGBA pixel format (no conversion needed for canvas)
 3. **Rendering**: HTML5 canvas with pixelated styling
-4. **Export/Import**: Bidirectional PNG conversion
+4. **Export/Import**: Bidirectional PNG conversion with pixel-perfect accuracy
 
 ### Paint.NET Integration
 1. Export sprite as temporary PNG
