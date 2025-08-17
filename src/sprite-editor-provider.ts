@@ -499,7 +499,7 @@ export class SpriteEditorProvider implements vscode.CustomReadonlyEditorProvider
         const width = data.readUInt16LE(6);
         const height = data.readUInt16LE(8);
         
-        if (width <= 0 || height <= 0 || width > 4096 || height > 4096) {
+        if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
             throw new Error(`Invalid dimensions: ${width}x${height}`);
         }
         
